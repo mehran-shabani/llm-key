@@ -1,1 +1,4 @@
-# Django apps package
+
+# Django app for core database models
+
+
