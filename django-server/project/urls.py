@@ -26,4 +26,6 @@ urlpatterns = [
     path('v1/admin/', include('apps.api_admin.urls')),
     path('v1/system/', include('apps.api_system.urls')),
     path('api/conversation/', include('apps.conversation.urls')),
+    path('api/stt/', include('apps.stt.urls')),
+    path('api/tts/', include('apps.tts.urls')),
 ]

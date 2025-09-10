@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'apps.api_admin',
     'apps.api_system',
     'apps.conversation',
+    'apps.stt',
+    'apps.tts',
 ]
 
 MIDDLEWARE = [
