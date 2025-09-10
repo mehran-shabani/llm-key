@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -7,6 +8,7 @@ from datetime import timedelta
 from django.utils import timezone
 import factory
 from factory.django import DjangoModelFactory
+import os
 
 from .models import RecoveryCode, PasswordResetToken, TemporaryAuthToken, DesktopMobileDevice
 
@@ -27,7 +29,9 @@ class UserFactory(DjangoModelFactory):
         if extracted:
             obj.set_password(extracted)
         else:
-            obj.set_password('defaultpass123')
+            # Use environment variable or generate random password
+            default_password = os.environ.get('TEST_USER_PASSWORD', factory.Faker('password').generate({}))
+            obj.set_password(default_password)
 
 
 class RecoveryCodeFactory(DjangoModelFactory):
@@ -68,9 +72,13 @@ class UserModelTest(TestCase):
     
     def test_superuser_creation(self):
         """Test superuser creation."""
+        # Use factory with dynamic values
+        admin_username = factory.Faker('user_name').generate({})
+        admin_password = factory.Faker('password').generate({})
+        
         admin = User.objects.create_superuser(
-            username='admin',
-            password='admin123'
+            username=admin_username,
+            password=admin_password
         )
         self.assertTrue(admin.is_staff)
         self.assertTrue(admin.is_superuser)
@@ -102,13 +110,15 @@ class PasswordResetTokenModelTest(TestCase):
 # API Tests
 class AuthenticationAPITest(APITestCase):
     def setUp(self):
-        self.user = UserFactory(password='testpass123')
+        # Generate test password dynamically
+        self.test_password = factory.Faker('password').generate({})
+        self.user = UserFactory(password=self.test_password)
     
     def test_login_success(self):
         """Test successful login."""
-        response = self.client.post('/api/auth/login/', {
+        response = self.client.post(reverse('token_obtain_pair'), {
             'username': self.user.username,
-            'password': 'testpass123'
+            'password': self.test_password
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
@@ -117,16 +127,16 @@ class AuthenticationAPITest(APITestCase):
     
     def test_login_invalid_credentials(self):
         """Test login with invalid credentials."""
-        response = self.client.post('/api/auth/login/', {
+        response = self.client.post(reverse('token_obtain_pair'), {
             'username': self.user.username,
-            'password': 'wrongpass'
+            'password': factory.Faker('password').generate({})  # Random wrong password
         })
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
     
     def test_token_refresh(self):
         """Test token refresh."""
         refresh = RefreshToken.for_user(self.user)
-        response = self.client.post('/api/auth/refresh/', {
+        response = self.client.post(reverse('token_refresh'), {
             'refresh': str(refresh)
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -135,8 +145,12 @@ class AuthenticationAPITest(APITestCase):
 
 class UserAPITest(APITestCase):
     def setUp(self):
-        self.user = UserFactory(password='testpass123')
-        self.admin = UserFactory(role='admin', password='adminpass123')
+        # Generate test passwords dynamically
+        self.user_password = factory.Faker('password').generate({})
+        self.admin_password = factory.Faker('password').generate({})
+        
+        self.user = UserFactory(password=self.user_password)
+        self.admin = UserFactory(role='admin', password=self.admin_password)
         
         # Get tokens
         self.user_token = str(RefreshToken.for_user(self.user).access_token)
@@ -144,56 +158,73 @@ class UserAPITest(APITestCase):
     
     def test_user_registration(self):
         """Test user registration."""
-        response = self.client.post('/api/users/', {
-            'username': 'newuser',
-            'email': 'new@example.com',
-            'password': 'NewPass123!',
-            'password_confirm': 'NewPass123!'
+        new_username = factory.Faker('user_name').generate({})
+        new_email = factory.Faker('email').generate({})
+        new_password = factory.Faker('password').generate({}) + '!A1'
+        
+        response = self.client.post(reverse('user-list'), {
+            'username': new_username,
+            'email': new_email,
+            'password': new_password,
+            'password_confirm': new_password
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username='newuser').exists())
+        self.assertTrue(User.objects.filter(username=new_username).exists())
     
     def test_get_current_user(self):
         """Test getting current user info."""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user_token}')
-        response = self.client.get('/api/users/me/')
+        response = self.client.get(reverse('user-me'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], self.user.username)
     
     def test_change_password(self):
         """Test password change."""
+        new_password = factory.Faker('password').generate({}) + '!B2'
+        
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user_token}')
-        response = self.client.post('/api/users/change_password/', {
-            'old_password': 'testpass123',
-            'new_password': 'NewPass456!',
-            'new_password_confirm': 'NewPass456!'
+        response = self.client.post(reverse('user-change-password'), {
+            'old_password': self.user_password,
+            'new_password': new_password,
+            'new_password_confirm': new_password
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Test login with new password
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('NewPass456!'))
+        self.assertTrue(self.user.check_password(new_password))
+        
+        # Verify can login with new password
+        login_response = self.client.post(reverse('token_obtain_pair'), {
+            'username': self.user.username,
+            'password': new_password
+        })
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
     
     def test_password_reset_request(self):
         """Test password reset request."""
-        response = self.client.post('/api/users/request_password_reset/', {
+        response = self.client.post(reverse('user-request-password-reset'), {
             'username': self.user.username
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(
-            PasswordResetToken.objects.filter(user=self.user).exists()
-        )
+        
+        # Check token was created with valid expiry
+        token = PasswordResetToken.objects.filter(user=self.user).first()
+        self.assertIsNotNone(token)
+        self.assertIsNotNone(token.expires_at)
+        self.assertGreater(token.expires_at, timezone.now())
+        self.assertLessEqual(token.expires_at, timezone.now() + timedelta(hours=24))
     
     def test_list_users_admin_only(self):
         """Test that only admins can list users."""
         # Non-admin should fail
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user_token}')
-        response = self.client.get('/api/users/')
+        response = self.client.get(reverse('user-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
         # Admin should succeed
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
-        response = self.client.get('/api/users/')
+        response = self.client.get(reverse('user-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -205,15 +236,17 @@ class DesktopMobileDeviceAPITest(APITestCase):
     
     def test_create_device(self):
         """Test device registration."""
-        response = self.client.post('/api/devices/', {
+        device_name = factory.Faker('catch_phrase').generate({})
+        
+        response = self.client.post(reverse('desktopmobiledevice-list'), {
             'device_os': 'iOS',
-            'device_name': 'iPhone 15'
+            'device_name': device_name
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(
             DesktopMobileDevice.objects.filter(
                 user=self.user,
-                device_name='iPhone 15'
+                device_name=device_name
             ).exists()
         )
     
@@ -222,11 +255,11 @@ class DesktopMobileDeviceAPITest(APITestCase):
         device = DesktopMobileDevice.objects.create(
             user=self.user,
             device_os='Android',
-            device_name='Pixel 8',
-            token='test_token'
+            device_name=factory.Faker('catch_phrase').generate({}),
+            token=factory.Faker('uuid4').generate({})
         )
         
-        response = self.client.post(f'/api/devices/{device.id}/approve/')
+        response = self.client.post(reverse('desktopmobiledevice-approve', kwargs={'pk': device.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         device.refresh_from_db()
@@ -237,12 +270,12 @@ class DesktopMobileDeviceAPITest(APITestCase):
         device = DesktopMobileDevice.objects.create(
             user=self.user,
             device_os='Android',
-            device_name='Pixel 8',
-            token='test_token',
+            device_name=factory.Faker('catch_phrase').generate({}),
+            token=factory.Faker('uuid4').generate({}),
             approved=True
         )
         
-        response = self.client.post(f'/api/devices/{device.id}/revoke/')
+        response = self.client.post(reverse('desktopmobiledevice-revoke', kwargs={'pk': device.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         device.refresh_from_db()

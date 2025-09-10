@@ -6,6 +6,8 @@ from authentication.serializers import UserSerializer
 class WorkspaceChatSerializer(serializers.ModelSerializer):
     """Serializer for WorkspaceChat model."""
     
+    # User field should be set from request context, not from input
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     username = serializers.CharField(source='user.username', read_only=True)
     
     class Meta:
@@ -15,7 +17,7 @@ class WorkspaceChatSerializer(serializers.ModelSerializer):
             'user', 'username', 'thread_id', 'api_session_id',
             'feedback_score', 'created_at', 'last_updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'last_updated_at']
+        read_only_fields = ['id', 'created_at', 'last_updated_at', 'username']
 
 
 class ChatStreamSerializer(serializers.Serializer):
@@ -32,7 +34,11 @@ class ChatStreamSerializer(serializers.Serializer):
         default='chat',
         required=False
     )
-    temperature = serializers.FloatField(min_value=0, max_value=2, required=False)
+    temperature = serializers.FloatField(min_value=0, max_value=2, required=False, default=0.7)
+    
+    # File upload limits
+    MAX_ATTACHMENTS = 10
+    MAX_FILE_SIZE_MB = 20
     
     def validate_message(self, value):
         """Validate message content."""
@@ -44,6 +50,22 @@ class ChatStreamSerializer(serializers.Serializer):
             raise serializers.ValidationError("Message is too long (max 10000 characters)")
         
         return value
+    
+    def validate_attachments(self, files):
+        """Validate attachment files."""
+        if len(files) > self.MAX_ATTACHMENTS:
+            raise serializers.ValidationError(
+                f"Too many attachments (max {self.MAX_ATTACHMENTS})"
+            )
+        
+        for file in files:
+            size_mb = getattr(file, 'size', 0) / (1024 * 1024)
+            if size_mb > self.MAX_FILE_SIZE_MB:
+                raise serializers.ValidationError(
+                    f"Attachment {getattr(file, 'name', '')} exceeds {self.MAX_FILE_SIZE_MB}MB"
+                )
+        
+        return files
 
 
 class ChatHistorySerializer(serializers.Serializer):
@@ -55,6 +77,14 @@ class ChatHistorySerializer(serializers.Serializer):
     include_system = serializers.BooleanField(default=False)
     limit = serializers.IntegerField(default=20, min_value=1, max_value=100)
     offset = serializers.IntegerField(default=0, min_value=0)
+    
+    def validate(self, attrs):
+        """Ensure at least one filter is provided to prevent full table scans."""
+        if not any(attrs.get(k) for k in ('workspace_id', 'thread_id', 'api_session_id')):
+            raise serializers.ValidationError(
+                "Provide at least one of workspace_id, thread_id, or api_session_id"
+            )
+        return attrs
 
 
 class ChatFeedbackSerializer(serializers.Serializer):
@@ -90,6 +120,16 @@ class ChatExportSerializer(serializers.Serializer):
     include_metadata = serializers.BooleanField(default=True)
     date_from = serializers.DateTimeField(required=False)
     date_to = serializers.DateTimeField(required=False)
+    
+    def validate(self, attrs):
+        """Validate date range."""
+        date_from = attrs.get('date_from')
+        date_to = attrs.get('date_to')
+        
+        if date_from and date_to and date_from > date_to:
+            raise serializers.ValidationError("date_from cannot be after date_to")
+        
+        return attrs
 
 
 class ChatSearchSerializer(serializers.Serializer):
