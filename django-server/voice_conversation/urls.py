@@ -1,8 +1,8 @@
 """
-URL configuration for project project.
+URL configuration for voice_conversation project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -16,14 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('v1/auth/', include('apps.api_auth.urls')),
-    path('v1/admin/', include('apps.api_admin.urls')),
-    path('v1/system/', include('apps.api_system.urls')),
     path('api/conversation/', include('apps.conversation.urls')),
 ]
