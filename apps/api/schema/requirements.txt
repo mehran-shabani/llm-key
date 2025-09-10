@@ -1,0 +1,12 @@
+# Django REST Framework Spectacular requirements
+# Add these to your Django project's requirements.txt
+
+# Core Django REST Framework
+djangorestframework>=3.14.0
+
+# DRF Spectacular for OpenAPI schema generation
+drf-spectacular>=0.26.0
+
+# Optional: Additional dependencies for enhanced features
+django-cors-headers>=4.0.0  # For CORS support
+django-filter>=23.0         # For filtering support
