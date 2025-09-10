@@ -1,1 +1,0 @@
-# Django app for API admin endpoints

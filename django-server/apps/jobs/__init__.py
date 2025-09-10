@@ -1,1 +1,0 @@
-# Jobs app for background tasks and management commands
