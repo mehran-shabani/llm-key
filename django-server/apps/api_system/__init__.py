@@ -1,0 +1,1 @@
+# Django app for API system endpoints
