@@ -1,0 +1,57 @@
+/* Minimal dark theme CSS for Swagger UI */
+
+/* Dark theme overrides */
+[data-theme="dark"] .swagger-ui {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+[data-theme="dark"] .swagger-ui .topbar {
+    background-color: #1a1a1a;
+}
+
+[data-theme="dark"] .swagger-ui .topbar .download-url-wrapper {
+    background-color: #2a2a2a;
+}
+
+[data-theme="dark"] .swagger-ui .topbar .download-url-wrapper input {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border-color: #444;
+}
+
+/* Custom logo styling */
+.swagger-ui .topbar-wrapper .topbar {
+    background-color: var(--primary-color, #2563eb);
+}
+
+.swagger-ui .topbar-wrapper .topbar .download-url-wrapper {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .theme-toggle,
+    .nav-links {
+        display: none;
+    }
+    
+    .swagger-container {
+        border: none;
+    }
+}
