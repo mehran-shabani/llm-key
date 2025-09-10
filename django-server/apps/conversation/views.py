@@ -42,36 +42,20 @@ def conversation_view(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Get OpenAI credentials from headers or environment
-        api_key = None
-        base_url = None
-        
-        # Try to get from headers first
+        # Extract headers for OpenAI client
+        headers = {}
         if 'X-OpenAI-API-Key' in request.headers:
-            api_key = request.headers['X-OpenAI-API-Key']
+            headers['X-OpenAI-Key'] = request.headers['X-OpenAI-API-Key']
         elif 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
-                api_key = auth_header[7:]
+                headers['X-OpenAI-Key'] = auth_header[7:]
         
-        # Try to get from environment variables
-        if not api_key:
-            api_key = os.getenv('OPENAI_API_KEY')
-        
-        if not api_key:
-            return Response(
-                {"error": "OpenAI API key not provided. Set X-OpenAI-API-Key header or OPENAI_API_KEY environment variable."},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
-        # Get base URL from headers or environment
         if 'X-OpenAI-Base-URL' in request.headers:
-            base_url = request.headers['X-OpenAI-Base-URL']
-        else:
-            base_url = os.getenv('OPENAI_BASE_URL')
+            headers['X-OpenAI-Base-URL'] = request.headers['X-OpenAI-Base-URL']
         
         # Initialize conversation service
-        conversation_service = ConversationService(api_key, base_url)
+        conversation_service = ConversationService()
         
         # Process the conversation
         audio_file = serializer.validated_data['audio']
@@ -83,7 +67,8 @@ def conversation_view(request):
             audio_file=audio_file,
             stt_model=stt_model,
             text_model=text_model,
-            tts_model=tts_model
+            tts_model=tts_model,
+            headers=headers
         )
         
         # Validate response

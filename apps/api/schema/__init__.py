@@ -1,0 +1,1 @@
+# Django app for API schema management using DRF Spectacular
