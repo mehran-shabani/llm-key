@@ -1,0 +1,76 @@
+# Core Django dependencies
+Django==4.2.16
+djangorestframework==3.15.2
+django-cors-headers==4.5.0
+django-environ==0.11.2
+django-filter==24.3
+
+# Database
+psycopg2-binary==2.9.10
+redis==5.2.1
+
+# Authentication & Security
+djangorestframework-simplejwt==5.3.1
+bcrypt==4.2.0
+cryptography==43.0.3
+
+# API Documentation
+drf-spectacular==0.27.2
+drf-spectacular-sidecar==2024.7.1
+
+# Async & Background Tasks
+celery==5.4.0
+django-celery-beat==2.7.0
+django-celery-results==2.5.1
+channels==4.2.0
+channels-redis==4.2.0
+daphne==4.1.2
+
+# File handling
+Pillow==11.0.0
+python-magic==0.4.27
+whitenoise==6.8.2
+
+# Utilities
+python-slugify==8.0.4
+python-dateutil==2.9.0.post0
+pytz==2024.2
+uuid==1.30
+
+# AI/ML Related (for embeddings and vector operations)
+numpy==1.26.4
+tiktoken==0.8.0
+langchain==0.3.12
+langchain-community==0.3.12
+openai==1.57.0
+anthropic==0.40.0
+cohere==5.13.3
+
+# Vector Database Clients
+pinecone-client==5.0.1
+qdrant-client==1.12.1
+chromadb==0.5.23
+weaviate-client==4.10.1
+
+# Testing
+pytest==8.3.4
+pytest-django==4.10.0
+pytest-cov==6.0.0
+factory-boy==3.3.1
+faker==33.1.0
+
+# Development tools
+ipython==8.31.0
+django-extensions==3.2.3
+django-debug-toolbar==4.4.6
+
+# Type checking
+mypy==1.14.0
+django-stubs==5.2.0
+djangorestframework-stubs==3.15.2
+
+# Code quality
+black==24.10.0
+flake8==7.1.1
+isort==5.13.2
+pre-commit==4.0.1
