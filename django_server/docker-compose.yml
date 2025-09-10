@@ -1,0 +1,190 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: anythingllm_db
+    environment:
+      POSTGRES_DB: anythingllm
+      POSTGRES_USER: anythingllm
+      POSTGRES_PASSWORD: anythingllm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anythingllm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anythingllm_network
+
+  # Redis for Caching and WebSockets
+  redis:
+    image: redis:7-alpine
+    container_name: anythingllm_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anythingllm_network
+
+  # Django Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anythingllm_web
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      daphne -b 0.0.0.0 -p 8000 anythingllm.asgi:application
+      "
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/storage
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://anythingllm:anythingllm@db:5432/anythingllm
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - anythingllm_network
+
+  # Celery Worker for Background Tasks
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anythingllm_celery
+    command: celery -A anythingllm worker -l info --concurrency=4
+    volumes:
+      - .:/app
+      - media_volume:/app/storage
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://anythingllm:anythingllm@db:5432/anythingllm
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - anythingllm_network
+
+  # Celery Beat for Scheduled Tasks
+  celerybeat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anythingllm_celerybeat
+    command: celery -A anythingllm beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://anythingllm:anythingllm@db:5432/anythingllm
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - anythingllm_network
+
+  # Nginx for Static Files and Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: anythingllm_nginx
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/static
+      - media_volume:/media
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+    networks:
+      - anythingllm_network
+
+  # Optional: pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: anythingllm_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@anythingllm.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - anythingllm_network
+    profiles:
+      - dev
+
+  # Optional: Flower for Celery Monitoring
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anythingllm_flower
+    command: celery -A anythingllm flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - anythingllm_network
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  anythingllm_network:
+    driver: bridge
