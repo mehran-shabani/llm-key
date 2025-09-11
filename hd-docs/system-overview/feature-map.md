@@ -43,8 +43,7 @@ This document provides a comprehensive feature map of the AnythingLLM system bas
 **Category:** Document Processing & Summarization  
 **Files:** `/collector/processSingleFile/convert/asAudio.js`, `/server/utils/WhisperProviders/`  
 **Technologies/Libraries:** OpenAI Whisper, Local Whisper models  
-**How it works:** Processes audio and video files (MP3, WAV, MP4, MPEG) by transcribing them to text using either OpenAI's Whisper API or local Whisper models, then treating the transcripts as documents for embedding.
-
+**How it works:** Uses browser's native speech recognition API for live chat input. Note: server-side live STT is not implemented; Whisper is used for offline document ingestion only.
 ### **Image Processing with OCR**
 **Category:** Document Processing & Summarization  
 **Files:** `/collector/processSingleFile/convert/asImage.js`, `/collector/utils/OCRLoader/`  
