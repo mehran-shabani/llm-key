@@ -331,6 +331,7 @@ See: `/server/endpoints/agentWebsocket.js`, `/server/utils/chats/stream.js`
 **Technologies/Libraries:** MySQL2, PostgreSQL (pg), MSSQL  
 **How it works:** Specialized SQL agent tools that can connect to databases, inspect schemas, list tables, and execute queries. Supports major database systems with proper connection management and query safety measures.
 
+> ⚠️ Safety: Use read-only credentials. Enforce allowlisted statements, row limits, and query timeouts. DDL/DML are disabled by default and must be explicitly enabled per workspace.
 ## System Monitoring / Logging
 
 ### **Telemetry System**
