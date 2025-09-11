@@ -102,6 +102,7 @@ This document provides a comprehensive feature map of the AnythingLLM system bas
 **Technologies/Libraries:** Multer for file uploads, React Dropzone  
 **How it works:** Image upload system with drag-and-drop interface. Images are processed both for OCR text extraction (via document processing pipeline) and direct vision model analysis during chat interactions.
 
+**Notes:** Max file size: <X MB>. Allowed types: PNG/JPG. Files are stored at <path/storage>. Malware scanning: <enabled/disabled>. PII handling: <policy>.
 ## LLM Providers (Local + Remote)
 
 ### **Commercial LLM Providers**
