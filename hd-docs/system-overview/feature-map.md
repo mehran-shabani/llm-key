@@ -121,7 +121,7 @@ This document provides a comprehensive feature map of the AnythingLLM system bas
 **Category:** LLM Providers  
 **Files:** `/server/utils/MCP/`, `/server/endpoints/mcpServers.js`  
 **Technologies/Libraries:** @modelcontextprotocol/sdk, uvx for MCP server management  
-**How it works:** Full MCP compatibility layer that allows integration with MCP servers as agent tools. Automatically discovers and loads MCP servers, converting their tools into AnythingLLM agent plugins with proper function calling support.
+**How it works:** MCP compatibility layer for integrating selected MCP servers as agent tools. Supports transports: stdio, sse, and streamableHttp (typed as 'http' in code). Discovery is config-based (storage/plugins/anythingllm_mcp_servers.json) — servers listed there may be auto-booted (anythingllm.autoStart); other servers require manual registration. Does not validate per-tool runtime dependencies; some tools need extra setup. Docker image includes uvx (pinned) for server management but this is not a guarantee of universal MCP compatibility.
 
 ## Vector Database Layer
 
