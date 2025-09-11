@@ -1,9 +1,23 @@
+---
+generated_at: "2025-09-11T00:15:13Z"
+repo_commit: "d6b3d336fd4fd7f732b3f1681f3d9cc2946437d1"
+version: "1.8.4"
+verification_script: "scripts/verify-feature-map.sh"
+---
+
 # AnythingLLM System Feature Map
 
-*Generated: September 10, 2025*  
-*Version: 1.8.4*
+This document provides a comprehensive feature map of the AnythingLLM system based on actual source code analysis at commit `d6b3d336fd4fd7f732b3f1681f3d9cc2946437d1`, organized by functional categories rather than technical layers.
 
-This document provides a comprehensive feature map of the AnythingLLM system based on actual source code analysis, organized by functional categories rather than technical layers.
+## Verification
+
+To validate the paths and providers listed in this document, run the verification script:
+
+```bash
+./scripts/verify-feature-map.sh
+```
+
+This script checks file existence, provider availability, and dependency consistency against the current repository state.
 
 ## Chat & Messaging
 
@@ -139,9 +153,9 @@ This document provides a comprehensive feature map of the AnythingLLM system bas
 
 ### **Vector Caching System**
 **Category:** Vector Database Layer  
-**Files:** `/server/storage/vector-cache/`, `/server/models/vectors.js`  
+**Files:** `/server/storage/` (runtime: `vector-cache/`), `/server/models/vectors.js`  
 **Technologies/Libraries:** File system caching, Prisma ORM  
-**How it works:** Intelligent vector caching system that stores computed embeddings to avoid reprocessing. Manages cache invalidation, storage optimization, and provides fast retrieval for previously processed content.
+**How it works:** Intelligent vector caching system that stores computed embeddings to avoid reprocessing. Manages cache invalidation, storage optimization, and provides fast retrieval for previously processed content. The `vector-cache/` directory is created at runtime in the storage location.
 
 ## Authentication & Roles
 
@@ -275,9 +289,9 @@ See: `/server/endpoints/agentWebsocket.js`, `/server/utils/chats/stream.js`
 
 ### **Environment Configuration**
 **Category:** DevOps / Deployment / Configuration  
-**Files:** `.env.example` files across components, `/server/utils/boot/`  
+**Files:** `./server/.env.example`, `./frontend/.env.example`, `./collector/.env.example`, `./docker/.env.example`, `/server/utils/boot/`  
 **Technologies/Libraries:** dotenv, environment validation  
-**How it works:** Comprehensive environment configuration system with validation and defaults. Supports development, production, and testing environments with automatic configuration detection and validation.
+**How it works:** Comprehensive environment configuration system with validation and defaults. Supports development, production, and testing environments with automatic configuration detection and validation. Each component has its own `.env.example` template.
 
 ### **Database Management**
 **Category:** DevOps / Deployment / Configuration  
