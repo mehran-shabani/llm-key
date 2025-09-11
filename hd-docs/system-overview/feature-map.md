@@ -371,7 +371,7 @@ AnythingLLM is a comprehensive, full-stack AI chatbot platform with 60+ distinct
 - **Flexible Deployment**: Docker, cloud templates, bare metal support
 - **Rich Integrations**: Browser extensions, mobile apps, embeddable widgets, MCP support
 
-The platform is production-ready with comprehensive documentation, testing, deployment automation, and active community support.
+The platform targets production use; maturity varies by area. See repository CI status, test coverage, and deployment guides for current readiness.
 
 ## Key Technical Highlights
 
