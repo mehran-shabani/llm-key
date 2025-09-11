@@ -203,24 +203,16 @@ This document provides a comprehensive feature map of the AnythingLLM system bas
 
 ## Streaming & Real-Time
 
-### **WebSocket Communication**
-**Category:** Streaming & Real-Time  
-**Files:** `/server/endpoints/agentWebsocket.js`, `/server/utils/agents/aibitat/plugins/websocket.js`  
-**Technologies/Libraries:** @mintplex-labs/express-ws, WebSocket protocol  
-**How it works:** Real-time WebSocket communication for agent interactions and live chat updates. Supports bidirectional communication for agent workflows and real-time collaboration features.
-
-### **Server-Sent Events (SSE)**
-**Category:** Streaming & Real-Time  
-**Files:** `/server/utils/chats/stream.js`, `/server/endpoints/chat.js`  
-**Technologies/Libraries:** Express SSE, @microsoft/fetch-event-source (client)  
-**How it works:** Streaming chat responses using Server-Sent Events for real-time message delivery. Handles connection management, error recovery, and graceful degradation for chat streaming.
+### **Streaming Architecture**
+- WebSocket: agents/bi-directional  
+- SSE: chat streaming/downstream-only  
+See: `/server/endpoints/agentWebsocket.js`, `/server/utils/chats/stream.js`
 
 ### **Agent Flow Execution**
 **Category:** Streaming & Real-Time  
 **Files:** `/server/utils/agentFlows/executor.js`, `/server/utils/agentFlows/executors/`  
 **Technologies/Libraries:** Custom flow execution engine  
 **How it works:** Real-time agent flow execution system supporting parallel and sequential task execution. Includes flow monitoring, progress tracking, and real-time status updates.
-
 ## Mobile / PWA
 
 ### **Mobile Device Management**
