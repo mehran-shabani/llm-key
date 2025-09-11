@@ -1,13 +1,13 @@
 ---
 generated_at: "2025-09-11T00:15:13Z"
-repo_commit: "d6b3d336fd4fd7f732b3f1681f3d9cc2946437d1"
+repo_commit: "0388fc1c6dcdea14eab4e929ca842e6df5ebe6a4"
 version: "1.8.4"
 verification_script: "scripts/verify-feature-map.sh"
 ---
 
 # AnythingLLM System Feature Map
 
-This document provides a comprehensive feature map of the AnythingLLM system based on actual source code analysis at commit `d6b3d336fd4fd7f732b3f1681f3d9cc2946437d1`, organized by functional categories rather than technical layers.
+This document provides a comprehensive feature map of the AnythingLLM system based on actual source code analysis at commit `0388fc1c6dcdea14eab4e929ca842e6df5ebe6a4`, organized by functional categories rather than technical layers.
 
 ## Verification
 
